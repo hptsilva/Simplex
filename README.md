@@ -6,5 +6,5 @@ Aluno: Humberto Pereira Teixeira Silva ------- Universidade Federal de Goiás - 
 
     Obs: * Este algoritmo Simplex é usado para maximizar problemas de programação linear.
          * Funciona apenas para restrições maiores ou iguais a zero.
-         * Precisa ser feito algumas modificações para que aceita todos os tipos de problemas de 
+         * Precisa ser feito algumas modificações para que aceite todos os tipos de problemas de 
            programação linear seguindo a restrição descrita acima.
