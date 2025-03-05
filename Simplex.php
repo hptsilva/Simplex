@@ -9,17 +9,18 @@
          Funciona apenas para restrições maiores ou iguais a zero.
 */
 
-    global $number_Constraints, $number_Decision, $matrix_Restrictions, $less, $bigger, $bigger_position1,
-           $less_position1, $less_position2, $column_pivot, $pivot, $pivot_line, $object_Function, $aux;
+    global $qtd_restricoes, $qtd_var_decisao, $matriz_restricoes, $less, $bigger, $bigger_position1,
+           $less_position1, $less_position2, $column_pivot, $pivot, $pivot_line, $object_Function, $aux, $qtd_interacao;;
+
 
     print ("Digite o número de variáveis de decisão: ");
-    $number_Decision = (int) readline();
+    $qtd_var_decisao = (int) trim(fgets(STDIN));
     print ("---------------------Para a Função Objetivo---------------------\n");
 
-    for ($i = 1; $i <= $number_Decision; $i++) {
+    for ($i = 1; $i <= $qtd_var_decisao; $i++) {
 
         print ("Digite o coeficiente da " . $i . "th variável de decisão: ");
-        $object_Function[$i] = -(float)readline();
+        $object_Function[$i] = -(float)trim(fgets(STDIN));
         if ($i == 1) {
 
             $less = $object_Function[$i];
@@ -40,35 +41,35 @@
 
     print ("---------------------Para as restrições---------------------\n");
     print ("Digite o número de restrições: ");
-    $number_Constraints = (int)readline();
+    $qtd_restricoes = (int)trim(fgets(STDIN));
 
-    for ($i = 1; $i <= $number_Constraints; $i++) {
+    for ($i = 1; $i <= $qtd_restricoes; $i++) {
 
         print ("Para a " . $i . "th restrição\n");
 
-        for ($j = 0; $j <= ($number_Decision + $number_Constraints); $j++) {
+        for ($j = 0; $j <= ($qtd_var_decisao + $qtd_restricoes); $j++) {
 
             if ($j == 0) {
 
-                $matrix_Restrictions[$i][$j] = 0;
+                $matriz_restricoes[$i][$j] = 0;
 
             }
             else {
 
-                if ($j <= $number_Decision) {
+                if ($j <= $qtd_var_decisao) {
 
                     print ("Digite o coeficiente da " . $j . "th variável de decisão: ");
-                    $matrix_Restrictions[$i][$j] = (float)readline();
+                    $matriz_restricoes[$i][$j] = (float)trim(fgets(STDIN));
 
-                } elseif ($j > $number_Decision) {
+                } elseif ($j > $qtd_var_decisao) {
 
-                    $matrix_Restrictions[$i][$j] = 0;
+                    $matriz_restricoes[$i][$j] = 0;
 
                 }
 
-                if ($i == $number_Constraints) {
+                if ($i == $qtd_restricoes) {
 
-                    $matrix_Restrictions[$i + 1][$j] = 0;
+                    $matriz_restricoes[$i + 1][$j] = 0;
 
                 }
 
@@ -76,36 +77,36 @@
 
         }
 
-        $matrix_Restrictions[$i][$i + $number_Decision] = 1;
+        $matriz_restricoes[$i][$i + $qtd_var_decisao] = 1;
         print ("Digite o valor da restrição: ");
-        $matrix_Restrictions[$i][$number_Decision + $number_Constraints + 1] = (float) readline();
+        $matriz_restricoes[$i][$qtd_var_decisao + $qtd_restricoes + 1] = (float) trim(fgets(STDIN));
 
     }
 
-    $matrix_Restrictions[$number_Constraints + 1][$number_Decision + $number_Constraints + 1] = 0;
-    $matrix_Restrictions[$number_Constraints + 1][0] = 0;
+    $matriz_restricoes[$qtd_restricoes + 1][$qtd_var_decisao + $qtd_restricoes + 1] = 0;
+    $matriz_restricoes[$qtd_restricoes + 1][0] = 0;
 
-    for ($i = 1; $i <= $number_Decision; $i++){
+    for ($i = 1; $i <= $qtd_var_decisao; $i++){
 
-        $matrix_Restrictions[$number_Constraints + 1][$i] = $object_Function[$i];
+        $matriz_restricoes[$qtd_restricoes + 1][$i] = $object_Function[$i];
 
     }
 
-    print("\nSchedule: \n");
-    $aux = $number_Decision + 1;
+    print("\nTabela Original: \n");
+    $aux = $qtd_var_decisao + 1;
 
-    for ($i = 1; $i <= $number_Constraints; $i++){
+    for ($i = 1; $i <= $qtd_restricoes; $i++){
 
-        $matrix_Restrictions[$i][0] = $aux;
+        $matriz_restricoes[$i][0] = $aux;
         $aux++;
 
     }
 
-    for ($i = 1; $i <= ($number_Constraints + 1); $i++){
+    for ($i = 1; $i <= ($qtd_restricoes + 1); $i++){
 
-        for ($j = 0; $j <= ($number_Constraints + $number_Decision + 1); $j++){
+        for ($j = 0; $j <= ($qtd_restricoes + $qtd_var_decisao + 1); $j++){
 
-            echo "  " . $matrix_Restrictions[$i][$j];
+            echo "  " . round($matriz_restricoes[$i][$j], 2);
 
         }
 
@@ -113,36 +114,38 @@
 
     }
 
-    Simplex_Maximize();
+    $qtd_interacao = 1;
 
-    function Simplex_Maximize(){
+    Simplex_Maximize($qtd_interacao);
 
-        global $number_Constraints, $number_Decision, $matrix_Restrictions, $less_position1,
+    function Simplex_Maximize(int $qtd_interacao){
+
+        global $qtd_restricoes, $qtd_var_decisao, $matriz_restricoes, $less_position1,
                $less_position2, $column_pivot, $less, $pivot, $column_pivot1;
 
-        for ($i = 1; $i <= $number_Constraints; $i++){// Percorre o tableau
+        for ($i = 1; $i <= $qtd_restricoes; $i++){// Percorre o tableau
 
-            for ($j = 1; $j <= ($number_Constraints + $number_Decision + 1); $j++) {
+            for ($j = 1; $j <= ($qtd_restricoes + $qtd_var_decisao + 1); $j++) {
 
                 if ($j == $less_position1){ // Se j for igual a coluna pivô
 
-                    $column_pivot[$i] = $matrix_Restrictions[$i][$number_Constraints + $number_Decision + 1] / $matrix_Restrictions[$i][$j]; // Divide o resultado da restrição pelo elemento da coluna pivô
-                    $column_pivot1[$i] = $matrix_Restrictions[$i][$j];
+                    $column_pivot[$i] = $matriz_restricoes[$i][$qtd_restricoes + $qtd_var_decisao + 1] / $matriz_restricoes[$i][$j]; // Divide o resultado da restrição pelo elemento da coluna pivô
+                    $column_pivot1[$i] = $matriz_restricoes[$i][$j];
 
                 }
 
             }
         }
 
-        $column_pivot1[$number_Constraints + 1] = $less;
+        $column_pivot1[$qtd_restricoes + 1] = $less;
         $less = 99999;
 
-        for ($i = 1; $i <= $number_Constraints; $i++){ // Percorre os valores do resultado da divisão para descobrir quem é o pivô da iteração
+        for ($i = 1; $i <= $qtd_restricoes; $i++){ // Percorre os valores do resultado da divisão para descobrir quem é o pivô da iteração
 
             if ($i == 1 and $column_pivot[$i] >= 0){
 
                 $less = $column_pivot[$i];
-                $pivot = $matrix_Restrictions[$i][$less_position1];
+                $pivot = $matriz_restricoes[$i][$less_position1];
                 $less_position2 = $i;
 
             }
@@ -151,7 +154,7 @@
                 if($column_pivot[$i] < $less and $column_pivot[$i] >= 0){
 
                     $less = $column_pivot[$i];
-                    $pivot = $matrix_Restrictions[$i][$less_position1];
+                    $pivot = $matriz_restricoes[$i][$less_position1];
                     $less_position2 = $i;
 
                 }
@@ -160,23 +163,23 @@
 
         }
 
-        for ($i = 1; $i <= $number_Constraints; $i++){ //Altera os valores da base no tableau
+        for ($i = 1; $i <= $qtd_restricoes; $i++){ //Altera os valores da base no tableau
 
             if ($i == $less_position2) {
 
-                $matrix_Restrictions[$i][0] = $less_position1;
+                $matriz_restricoes[$i][0] = $less_position1;
 
             }
 
         }
 
-        for ($i = 1; $i <= $number_Constraints; $i++){ // Percorre o tableau
+        for ($i = 1; $i <= $qtd_restricoes; $i++){ // Percorre o tableau
 
-            for ($j = 1; $j <= ($number_Constraints + $number_Decision + 1); $j++){ //atualiza os elementos da linha pivô fazendo a divisão desses elementos pelo pivô
+            for ($j = 1; $j <= ($qtd_restricoes + $qtd_var_decisao + 1); $j++){ //atualiza os elementos da linha pivô fazendo a divisão desses elementos pelo pivô
 
                 if ($less_position2 == $i){
 
-                    $matrix_Restrictions[$i][$j] = $matrix_Restrictions[$i][$j] / $pivot;
+                    $matriz_restricoes[$i][$j] = $matriz_restricoes[$i][$j] / $pivot;
 
                 }
 
@@ -184,13 +187,13 @@
 
         }
 
-        for ($i = 1; $i <= ($number_Constraints + 1); $i++){
+        for ($i = 1; $i <= ($qtd_restricoes + 1); $i++){
 
-            for ($j = 1; $j <= ($number_Constraints + $number_Decision + 1); $j++){
+            for ($j = 1; $j <= ($qtd_restricoes + $qtd_var_decisao + 1); $j++){
 
                 if ($less_position2 != $i){
 
-                    $matrix_Restrictions[$i][$j] = $matrix_Restrictions[$i][$j] - ($column_pivot1[$i] * $matrix_Restrictions[$less_position2][$j]);
+                    $matriz_restricoes[$i][$j] = $matriz_restricoes[$i][$j] - ($column_pivot1[$i] * $matriz_restricoes[$less_position2][$j]);
 
                 }
 
@@ -200,11 +203,13 @@
 
         print("\n");
 
-        for ($i = 1; $i <= ($number_Constraints + 1); $i++){
+        print("\nTabela (Iteração $qtd_interacao): \n");
 
-            for($j = 0; $j <= ($number_Constraints + $number_Decision + 1); $j++){
+        for ($i = 1; $i <= ($qtd_restricoes + 1); $i++){
 
-                echo $matrix_Restrictions[$i][$j] . " ";
+            for($j = 0; $j <= ($qtd_restricoes + $qtd_var_decisao + 1); $j++){
+
+                echo " " . round($matriz_restricoes[$i][$j], 2) . " ";
 
             }
 
@@ -212,18 +217,18 @@
 
         }
 
-        for ($j = 1; $j <= ($number_Constraints + $number_Decision + 1); $j++){ // Verifica qual elemento da função objetivo é menor e grava sua posição
+        for ($j = 1; $j <= ($qtd_restricoes + $qtd_var_decisao + 1); $j++){ // Verifica qual elemento da função objetivo é menor e grava sua posição
 
             if ($j == 1){ //atribui o primeiro elemento como menor
 
-                $less = $matrix_Restrictions[$number_Constraints + 1][$j];
+                $less = $matriz_restricoes[$qtd_restricoes + 1][$j];
 
             }
             else{
 
-                if ($matrix_Restrictions[$number_Constraints + 1][$j] < $less){
+                if ($matriz_restricoes[$qtd_restricoes + 1][$j] < $less){
 
-                    $less = $matrix_Restrictions[$number_Constraints + 1][$j];
+                    $less = $matriz_restricoes[$qtd_restricoes + 1][$j];
                     $less_position1 = $j;
 
                 }
@@ -232,11 +237,11 @@
 
         }
 
-        for ($j = 1; $j <= ($number_Constraints + $number_Decision + 1); $j++){ // verificação de parada do algoritmo
+        for ($j = 1; $j <= ($qtd_restricoes + $qtd_var_decisao + 1); $j++){ // verificação de parada do algoritmo
 
-            if($matrix_Restrictions[$number_Constraints + 1][$j] < 0){
+            if($matriz_restricoes[$qtd_restricoes + 1][$j] < 0){
 
-                Simplex_Maximize();
+                Simplex_Maximize($qtd_interacao + 1);
 
             }
 
@@ -246,17 +251,17 @@
 
     print("\n");
 
-    for ($i = 1; $i <= ($number_Constraints + 1); $i++){
+    for ($i = 1; $i <= ($qtd_restricoes + 1); $i++){
 
         $j = 0;
-        if ($matrix_Restrictions[$i][$j] > 0 and $matrix_Restrictions[$i][$j] <=  $number_Decision ){
+        if ($matriz_restricoes[$i][$j] > 0 and $matriz_restricoes[$i][$j] <=  $qtd_var_decisao ){
 
-            echo $matrix_Restrictions[$i][$j] . "th variável de decisão = " . $matrix_Restrictions[$i][($number_Constraints + $number_Decision + 1)];
+            echo $matriz_restricoes[$i][$j] . "th variável de decisão = " . $matriz_restricoes[$i][($qtd_restricoes + $qtd_var_decisao + 1)];
             print("\n");
         }
-        if ($matrix_Restrictions[$i][$j] == 0){
+        if ($matriz_restricoes[$i][$j] == 0){
 
-            echo "Z = " . $matrix_Restrictions[$i][$number_Constraints + $number_Decision + 1];
+            echo "Z = " . $matriz_restricoes[$i][$qtd_restricoes + $qtd_var_decisao + 1];
 
         }
 
